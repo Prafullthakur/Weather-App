@@ -1,0 +1,26 @@
+
+
+        <View style={styles.weather}>
+        <Image style={{width: 68, height: 68}} source={icon7} />
+        <Text style={styles.aboutweather}>
+          Snow consists of frozen crystalline water throughout its life cycle,
+          starting when, under suitable conditions, Snow is ice crystals form.
+        </Text>
+      </View>
+
+      <View style={styles.weather}>
+        <Image style={{width: 68, height: 68}} source={icon1} />
+        <Text style={styles.aboutweather}>
+          Thunder is the sound caused by lightning.Depending on the distance
+          from and nature of the lightning, it can range from a sharp, loud
+          crack.
+        </Text>
+      </View>
+
+
+
+
+
+
+
+       
