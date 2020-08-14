@@ -17,7 +17,7 @@ import clouds from '../assets/cloud.png';
 import * as Animatable from 'react-native-animatable';
 import Menu from '../assets/menu.png';
 import Plus from '../assets/plus.png';
-import SemiClouds from '../assets/icons8-clouds-48.png';
+
 import Water from '../assets/water.png';
 export default function Home() {
   const [refreshing, setRefreshing] = React.useState(false);
@@ -25,6 +25,7 @@ export default function Home() {
   const [weath, setWeath] = React.useState([]);
   const [hourWeath, setHourWeath] = React.useState([]);
   const [dayPart, setDayPart] = React.useState(null);
+  const [dailyWeath, setDailyWeath] = React.useState([]);
   const slide = {
     from: {
       marginLeft: 0,
@@ -42,24 +43,18 @@ export default function Home() {
       if (this.readyState === this.DONE) {
         let temp = JSON.parse(this.responseText);
         setWeath(temp.data);
-        const date = new Date();
-        const year = date.getFullYear();
-        const month = date.getMonth();
-        const day = date.getDate();
-        const today = year + '-' + month + '-' + `${day + 1}`;
-        const tomorrow = year + '-' + month + '-' + `${day + 2}`;
+
         temp.data.map((data) => setDayPart(data.pod));
-        runhour(latitude, longitude, today, tomorrow);
       }
     });
 
     xhr.open(
       'GET',
-      `https://api.weatherbit.io/v2.0/current?lang=en&lat=${latitude}&lon=${longitude}&key=e758a452b22b4492b929e3da1f871f82`,
+      `https://api.weatherbit.io/v2.0/current?lang=en&lat=${latitude}&lon=${longitude}&key=8b2561217ead4dbc80bc647368edd68c`,
     );
     xhr.send(data);
   };
-  const runhour = (latitude, longitude, today, tomorrow) => {
+  const runhour = (latitude, longitude) => {
     var data = null;
     var xhr = new XMLHttpRequest();
     xhr.withCredentials = true;
@@ -68,13 +63,33 @@ export default function Home() {
       if (this.readyState === this.DONE) {
         let dat = JSON.parse(this.responseText);
         let temp = dat.data;
+        console.log(temp);
         setHourWeath(temp);
       }
     });
 
     xhr.open(
       'GET',
-      `https://api.weatherbit.io/v2.0/history/hourly?lang=en&lat=${latitude}&lon=${longitude}&start_date=${today}&end_date=${tomorrow}&tz=local&key=e758a452b22b4492b929e3da1f871f82`,
+      `https://api.weatherbit.io/v2.0/forecast/hourly?lang=en&lat=${latitude}&lon=${longitude}&key=8b2561217ead4dbc80bc647368edd68c&hours=24`,
+    );
+    xhr.send(data);
+  };
+  const rundaily = (latitude, longitude) => {
+    var data = null;
+    var xhr = new XMLHttpRequest();
+    xhr.withCredentials = true;
+
+    xhr.addEventListener('readystatechange', function () {
+      if (this.readyState === this.DONE) {
+        let dat = JSON.parse(this.responseText);
+        let temp = dat.data;
+        setDailyWeath(temp);
+      }
+    });
+
+    xhr.open(
+      'GET',
+      `https://api.weatherbit.io/v2.0/forecast/daily?lang=en&lat=${latitude}&lon=${longitude}&key=8b2561217ead4dbc80bc647368edd68c&days=7`,
     );
     xhr.send(data);
   };
@@ -94,6 +109,8 @@ export default function Home() {
           const latitude = position.coords.latitude;
           const longitude = position.coords.longitude;
           run(latitude, longitude);
+          runhour(latitude, longitude);
+          rundaily(latitude, longitude);
         } catch (error) {
           console.log(error);
         }
@@ -120,9 +137,11 @@ export default function Home() {
           if (lat === latitude && long === longitude) {
             run(lat, long);
             runhour(lat, long);
+            rundaily(lat, long);
           } else {
             run(latitude, longitude);
             runhour(latitude, longitude);
+            rundaily(latitude, longitude);
           }
         } catch (error) {
           console.log(error);
@@ -239,7 +258,6 @@ export default function Home() {
                     scrollEventThrottle={200}
                     decelerationRate="fast"
                     pagingEnabled>
-                    {console.log(hourWeath)}
                     {hourWeath ? (
                       hourWeath.map((weather) => (
                         <View
@@ -298,24 +316,87 @@ export default function Home() {
                 </View>
                 <View style={styles.sixthHead}>
                   <Text style={styles.sixthText}>Daily</Text>
-                  <Text style={styles.sixthText}>
-                    Yesterday: 30{'\u00b0'}
-                    {'/'}27{'\u00b0'}
-                  </Text>
                 </View>
                 <View style={styles.sixth}>
                   <ScrollView
                     horizontal={true}
-                    contentContainerStyle={{width: `${200}%`}}
+                    contentContainerStyle={{width: `${180}%`}}
                     showsHorizontalScrollIndicator={false}
                     scrollEventThrottle={200}
                     decelerationRate="fast"
-                    pagingEnabled></ScrollView>
+                    pagingEnabled>
+                    {dailyWeath ? (
+                      dailyWeath.map((weather) => (
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                          }}>
+                          <View style={styles.hourCont}>
+                            <Text style={styles.time}>{weather.datetime}</Text>
+                            <Image
+                              style={{
+                                marginTop: 4,
+                                marginBottom: 4,
+                                width: 35,
+                                height: 35,
+                              }}
+                              source={clouds}
+                            />
+                            <Text style={{color: 'white'}}>
+                              {weather.max_temp}
+                              {'\u00b0'}
+                            </Text>
+
+                            <View
+                              style={{
+                                borderBottomColor: 'white',
+                                borderBottomWidth: 1,
+                                width: 30,
+                                height: 1,
+                              }}
+                            />
+                            <Text style={{color: 'white'}}>
+                              {weather.min_temp}
+                              {'\u00b0'}
+                            </Text>
+
+                            <View style={styles.fifthLast}>
+                              <Image
+                                source={Water}
+                                style={{width: 10, height: 10}}
+                              />
+                              <Text style={{color: 'white'}}>{weather.rh}</Text>
+                            </View>
+                          </View>
+                        </View>
+                      ))
+                    ) : (
+                      <></>
+                    )}
+                  </ScrollView>
                 </View>
                 <View style={styles.seventhHead}>
                   <Text style={styles.seventhText}>Details</Text>
                 </View>
-                <View style={styles.seventh}></View>
+                <View style={styles.seventh}>
+                  {weath.map((weather) => (
+                    <>
+                      <View style={styles.seventhDetail}>
+                        <Text style={styles.textDetail}>Sunrise</Text>
+                        <Text style={styles.textDetail}>{weather.sunrise}</Text>
+                      </View>
+                      <View style={styles.seventhDetail}>
+                        <Text style={styles.textDetail}>Sunset</Text>
+                        <Text style={styles.textDetail}>{weather.sunset}</Text>
+                      </View>
+                      <View style={styles.seventhDetail}>
+                        <Text style={styles.textDetail}>Humidity</Text>
+                        <Text style={styles.textDetail}>{weather.rh}%</Text>
+                      </View>
+                    </>
+                  ))}
+                </View>
               </>
             </ImageBackground>
           </View>
@@ -330,7 +411,7 @@ const styles = StyleSheet.create({
     marginTop: 0,
   },
   scrollView: {
-    height: `${152}%`,
+    height: `${138}%`,
   },
   home: {flex: 1, flexDirection: 'row', backgroundColor: 'transparent'},
   droawer: {
@@ -406,6 +487,7 @@ const styles = StyleSheet.create({
   },
   sixth: {
     marginTop: 5,
+    paddingLeft: 10,
     height: 200,
     width: `${100}%`,
     backgroundColor: 'rgba(255,255,255,0.7)',
@@ -420,9 +502,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   seventh: {
+    padding: 20,
     marginTop: 5,
     marginBottom: 15,
-    height: 200,
+    height: 185,
     width: `${100}%`,
     backgroundColor: 'rgba(255,255,255,0.7)',
     borderRadius: 20,
@@ -439,12 +522,25 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 17,
   },
+  seventhDetail: {
+    paddingTop: 10,
+    paddingBottom: 10,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+    borderBottomWidth: 1,
+  },
   hourCont: {
     height: 150,
     marginLeft: 7,
     marginRight: 5,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  textDetail: {
+    color: 'white',
+    fontSize: 17,
   },
   time: {
     fontSize: 15,
