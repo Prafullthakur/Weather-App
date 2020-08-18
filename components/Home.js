@@ -1,4 +1,5 @@
 import React from 'react';
+import {useNavigation} from '@react-navigation/native';
 import {
   View,
   Text,
@@ -17,9 +18,9 @@ import clouds from '../assets/cloud.png';
 import * as Animatable from 'react-native-animatable';
 import Menu from '../assets/menu.png';
 import Plus from '../assets/plus.png';
-
 import Water from '../assets/water.png';
-export default function Home() {
+export default function Home({country}) {
+  const navigation = useNavigation();
   const [refreshing, setRefreshing] = React.useState(false);
   const [droawer, setDroawer] = React.useState(false);
   const [weath, setWeath] = React.useState([]);
@@ -63,7 +64,7 @@ export default function Home() {
       if (this.readyState === this.DONE) {
         let dat = JSON.parse(this.responseText);
         let temp = dat.data;
-        console.log(temp);
+
         setHourWeath(temp);
       }
     });
@@ -244,9 +245,7 @@ export default function Home() {
                   </TouchableHighlight>
                   <TouchableHighlight
                     underlayColor="transparent"
-                    onPress={() => {
-                      setDroawer(!droawer);
-                    }}>
+                    onPress={() => navigation.navigate('NewLocation')}>
                     <Image source={Plus} style={styles.plus} />
                   </TouchableHighlight>
                 </View>
@@ -411,7 +410,7 @@ const styles = StyleSheet.create({
     marginTop: 0,
   },
   scrollView: {
-    height: `${138}%`,
+    height: `${148}%`,
   },
   home: {flex: 1, flexDirection: 'row', backgroundColor: 'transparent'},
   droawer: {
