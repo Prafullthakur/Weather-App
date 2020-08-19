@@ -1,6 +1,8 @@
 import React from 'react';
 import {useNavigation} from '@react-navigation/native';
+import axios from 'axios';
 import {
+  Alert,
   View,
   Text,
   RefreshControl,
@@ -12,14 +14,14 @@ import {
   TouchableHighlight,
 } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
-navigator.geolocation = require('@react-native-community/geolocation');
+import Geolocation from '@react-native-community/geolocation';
 import locationicon from '../assets/location-pin.png';
 import clouds from '../assets/cloud.png';
 import * as Animatable from 'react-native-animatable';
 import Menu from '../assets/menu.png';
 import Plus from '../assets/plus.png';
 import Water from '../assets/water.png';
-export default function Home({country}) {
+export default function Home() {
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = React.useState(false);
   const [droawer, setDroawer] = React.useState(false);
@@ -27,6 +29,7 @@ export default function Home({country}) {
   const [hourWeath, setHourWeath] = React.useState([]);
   const [dayPart, setDayPart] = React.useState(null);
   const [dailyWeath, setDailyWeath] = React.useState([]);
+
   const slide = {
     from: {
       marginLeft: 0,
@@ -36,63 +39,41 @@ export default function Home({country}) {
     },
   };
   const run = (latitude, longitude) => {
-    var data = null;
-    var xhr = new XMLHttpRequest();
-    xhr.withCredentials = true;
-
-    xhr.addEventListener('readystatechange', function () {
-      if (this.readyState === this.DONE) {
-        let temp = JSON.parse(this.responseText);
-        setWeath(temp.data);
-
-        temp.data.map((data) => setDayPart(data.pod));
-      }
-    });
-
-    xhr.open(
-      'GET',
-      `https://api.weatherbit.io/v2.0/current?lang=en&lat=${latitude}&lon=${longitude}&key=8b2561217ead4dbc80bc647368edd68c`,
-    );
-    xhr.send(data);
+    axios
+      .get(
+        `https://api.weatherbit.io/v2.0/current?lang=en&lat=${latitude}&lon=${longitude}&key=8b2561217ead4dbc80bc647368edd68c`,
+      )
+      .then((res) => {
+        setWeath(res.data.data);
+        res.data.data.map((data) => setDayPart(data.pod));
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
   };
   const runhour = (latitude, longitude) => {
-    var data = null;
-    var xhr = new XMLHttpRequest();
-    xhr.withCredentials = true;
-
-    xhr.addEventListener('readystatechange', function () {
-      if (this.readyState === this.DONE) {
-        let dat = JSON.parse(this.responseText);
-        let temp = dat.data;
-
-        setHourWeath(temp);
-      }
-    });
-
-    xhr.open(
-      'GET',
-      `https://api.weatherbit.io/v2.0/forecast/hourly?lang=en&lat=${latitude}&lon=${longitude}&key=8b2561217ead4dbc80bc647368edd68c&hours=24`,
-    );
-    xhr.send(data);
+    axios
+      .get(
+        `https://api.weatherbit.io/v2.0/forecast/hourly?lang=en&lat=${latitude}&lon=${longitude}&key=8b2561217ead4dbc80bc647368edd68c&hours=24`,
+      )
+      .then((res) => {
+        setHourWeath(res.data.data);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
   };
   const rundaily = (latitude, longitude) => {
-    var data = null;
-    var xhr = new XMLHttpRequest();
-    xhr.withCredentials = true;
-
-    xhr.addEventListener('readystatechange', function () {
-      if (this.readyState === this.DONE) {
-        let dat = JSON.parse(this.responseText);
-        let temp = dat.data;
-        setDailyWeath(temp);
-      }
-    });
-
-    xhr.open(
-      'GET',
-      `https://api.weatherbit.io/v2.0/forecast/daily?lang=en&lat=${latitude}&lon=${longitude}&key=8b2561217ead4dbc80bc647368edd68c&days=7`,
-    );
-    xhr.send(data);
+    axios
+      .get(
+        `https://api.weatherbit.io/v2.0/forecast/daily?lang=en&lat=${latitude}&lon=${longitude}&key=8b2561217ead4dbc80bc647368edd68c&days=7`,
+      )
+      .then((res) => {
+        setDailyWeath(res.data.data);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
   };
   const wait = (timeout) => {
     return new Promise((resolve) => {
@@ -102,7 +83,7 @@ export default function Home({country}) {
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    navigator.geolocation.getCurrentPosition(
+    Geolocation.getCurrentPosition(
       async (position) => {
         const location = JSON.stringify(position);
         try {
@@ -123,8 +104,8 @@ export default function Home({country}) {
     wait(1500).then(() => setRefreshing(false));
   }, []);
 
-  const retrivedata = async () => {
-    navigator.geolocation.getCurrentPosition(
+  const retrivedata = () => {
+    Geolocation.getCurrentPosition(
       async (position) => {
         const location = JSON.stringify(position);
         try {
@@ -139,6 +120,7 @@ export default function Home({country}) {
             run(lat, long);
             runhour(lat, long);
             rundaily(lat, long);
+            console.log('I am working');
           } else {
             run(latitude, longitude);
             runhour(latitude, longitude);

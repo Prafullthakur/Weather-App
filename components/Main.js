@@ -1,5 +1,5 @@
 import React from 'react';
-import {useNavigation} from '@react-navigation/native';
+
 import {Alert, SafeAreaView, ScrollView, View, StatusBar} from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 import FirstPage from './FirstPage';
@@ -9,10 +9,9 @@ import Home from './Home';
 // navigator.geolocation = require('@react-native-community/geolocation');
 import Geolocation from '@react-native-community/geolocation';
 
-export default function Main({route}) {
-  const navigation = useNavigation();
+export default function Main() {
   const [location, setLocation] = React.useState(null);
-  const [country, setCountry] = React.useState(null);
+
   const findCoordinates = () => {
     Geolocation.getCurrentPosition(
       async (position) => {
@@ -47,11 +46,6 @@ export default function Main({route}) {
 
   React.useEffect(() => {
     getLocation();
-    if (route.params) {
-      const {cityName, stateName, countryName} = route.params;
-      const {otherParam} = route.params;
-      setCountry({cityName, stateName, countryName});
-    }
   }, []);
 
   return !location ? (
@@ -76,7 +70,7 @@ export default function Main({route}) {
     </>
   ) : (
     <>
-      <Home country={country} />
+      <Home />
     </>
   );
 }

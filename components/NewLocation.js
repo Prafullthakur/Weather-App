@@ -57,16 +57,7 @@ export default function NewLocation() {
                       <TouchableOpacity
                         style={{width: `${100}%`}}
                         onPress={() => {
-                          setcountriesList({
-                            cityName: country.cityName,
-                            stateName: country.stateName,
-                            countryName: country.countryName,
-                          }),
-                            navigation.navigate('Main', {
-                              cityName: country.cityName,
-                              stateName: country.stateName,
-                              countryName: country.countryName,
-                            });
+                          navigation.navigate('Main');
                         }}>
                         <View style={styles.listItem}>
                           <Image
