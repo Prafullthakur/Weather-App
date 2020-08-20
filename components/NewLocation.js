@@ -57,7 +57,11 @@ export default function NewLocation() {
                       <TouchableOpacity
                         style={{width: `${100}%`}}
                         onPress={() => {
-                          navigation.navigate('Main');
+                          navigation.navigate('Main', {
+                            cityName: country.cityName,
+                            stateName: country.stateName,
+                            countryName: country.countryName,
+                          });
                         }}>
                         <View style={styles.listItem}>
                           <Image
@@ -97,8 +101,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   heading: {
+    marginLeft: 3,
     color: 'rgba(255,255,255,0.8)',
-    fontSize: 25,
+    fontSize: 27,
   },
   searchView: {
     flexDirection: 'row',

@@ -21,15 +21,16 @@ import * as Animatable from 'react-native-animatable';
 import Menu from '../assets/menu.png';
 import Plus from '../assets/plus.png';
 import Water from '../assets/water.png';
-export default function Home() {
+import loading from '../assets/Gifs/loading.gif';
+export default function Home({one}) {
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = React.useState(false);
-  const [droawer, setDroawer] = React.useState(false);
-  const [weath, setWeath] = React.useState([]);
-  const [hourWeath, setHourWeath] = React.useState([]);
-  const [dayPart, setDayPart] = React.useState(null);
-  const [dailyWeath, setDailyWeath] = React.useState([]);
 
+  const [weath, setWeath] = React.useState(null);
+  const [hourWeath, setHourWeath] = React.useState(null);
+  const [dayPart, setDayPart] = React.useState(null);
+  const [dailyWeath, setDailyWeath] = React.useState(null);
+  const [country, setCountry] = React.useState(null);
   const slide = {
     from: {
       marginLeft: 0,
@@ -44,6 +45,7 @@ export default function Home() {
         `https://api.weatherbit.io/v2.0/current?lang=en&lat=${latitude}&lon=${longitude}&key=8b2561217ead4dbc80bc647368edd68c`,
       )
       .then((res) => {
+        console.log(res.data.data);
         setWeath(res.data.data);
         res.data.data.map((data) => setDayPart(data.pod));
       })
@@ -80,309 +82,363 @@ export default function Home() {
       setTimeout(resolve, timeout);
     });
   };
+  const runSearch = (city, country) => {
+    axios
+      .get(
+        `https://api.weatherbit.io/v2.0/current?lang=en&city=${city}&country=${country}&key=8b2561217ead4dbc80bc647368edd68c`,
+      )
+      .then((res) => {
+        console.log(res);
+        setWeath(res.data.data);
+        res.data.data.map((data) => setDayPart(data.pod));
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  };
+  const runSearchDaily = (city, country) => {
+    axios
+      .get(
+        `https://api.weatherbit.io/v2.0/forecast/hourly?lang=en&city=${city}&country=${country}&key=8b2561217ead4dbc80bc647368edd68c&hours=24`,
+      )
+      .then((res) => {
+        setHourWeath(res.data.data);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  };
 
+  const runSearchWeek = (city, country) => {
+    axios
+      .get(
+        `https://api.weatherbit.io/v2.0/forecast/daily?lang=en&city=${city}&country=${country}&key=8b2561217ead4dbc80bc647368edd68c&days=7`,
+      )
+      .then((res) => {
+        setDailyWeath(res.data.data);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  };
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    Geolocation.getCurrentPosition(
-      async (position) => {
-        const location = JSON.stringify(position);
-        try {
-          await AsyncStorage.setItem('location', location);
-          const latitude = position.coords.latitude;
-          const longitude = position.coords.longitude;
-          run(latitude, longitude);
-          runhour(latitude, longitude);
-          rundaily(latitude, longitude);
-        } catch (error) {
-          console.log(error);
-        }
-      },
-      (error) => Alert.alert(error.message),
-      {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000},
-    );
+    if (!one) {
+      Geolocation.getCurrentPosition(
+        async (position) => {
+          const location = JSON.stringify(position);
+          try {
+            await AsyncStorage.setItem('location', location);
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            run(latitude, longitude);
+            runhour(latitude, longitude);
+            rundaily(latitude, longitude);
+          } catch (error) {
+            console.log(error);
+          }
+        },
+        (error) => Alert.alert(error.message),
+        {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000},
+      );
+    } else {
+      runSearch(one.cityName, one.countryName);
+      runSearchWeek(one.cityName, one.countryName);
+      runSearchDaily(one.cityName, one.countryName);
+    }
 
     wait(1500).then(() => setRefreshing(false));
   }, []);
 
   const retrivedata = () => {
-    Geolocation.getCurrentPosition(
-      async (position) => {
-        const location = JSON.stringify(position);
-        try {
-          await AsyncStorage.setItem('location', location);
-          const value = await AsyncStorage.getItem('locationone');
-          const temp = JSON.parse(value);
-          const lat = temp.coords.latitude;
-          const long = temp.coords.longitude;
-          const latitude = position.coords.latitude;
-          const longitude = position.coords.longitude;
-          if (lat === latitude && long === longitude) {
-            run(lat, long);
-            runhour(lat, long);
-            rundaily(lat, long);
-            console.log('I am working');
-          } else {
-            run(latitude, longitude);
-            runhour(latitude, longitude);
-            rundaily(latitude, longitude);
+    if (one) {
+      runSearch(one.cityName, one.countryName);
+      runSearchWeek(one.cityName, one.countryName);
+      runSearchDaily(one.cityName, one.countryName);
+    } else {
+      Geolocation.getCurrentPosition(
+        async (position) => {
+          const location = JSON.stringify(position);
+          try {
+            await AsyncStorage.setItem('location', location);
+            const value = await AsyncStorage.getItem('locationone');
+            const temp = JSON.parse(value);
+            const lat = temp.coords.latitude;
+            const long = temp.coords.longitude;
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            if (lat == latitude && long == longitude) {
+              run(lat, long);
+              runhour(lat, long);
+              rundaily(lat, long);
+            } else {
+              run(latitude, longitude);
+              runhour(latitude, longitude);
+              rundaily(latitude, longitude);
+            }
+          } catch (error) {
+            console.log(error);
           }
-        } catch (error) {
-          console.log(error);
-        }
-      },
-      (error) => Alert.alert(error.message),
-      {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000},
-    );
+        },
+        (error) => Alert.alert(error.message),
+        {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000},
+      );
+    }
   };
 
   React.useEffect(() => {
+    one ? setCountry(one) : setCountry(null);
     retrivedata();
-  }, []);
+  }, [one]);
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollView}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }>
-        <View style={styles.home}>
-          {droawer ? (
-            <View style={styles.droawer}>
-              <TouchableHighlight
-                underlayColor="tranparent"
-                onPress={() => {
-                  setDroawer(!droawer);
-                }}>
-                <View style={{width: `${100}%`, height: `${100}%`}}>
-                  <Text>hello</Text>
-                </View>
-              </TouchableHighlight>
-            </View>
-          ) : (
-            <View></View>
-          )}
-          <View style={styles.homePage}>
-            <ImageBackground
-              source={
-                dayPart === 'n'
-                  ? require('../assets/night.jpg')
-                  : require('../assets/day.jpg')
-              }
-              style={{height: `${100}%`, width: `${100}%`}}>
-              {weath.map((weather) => (
-                <>
-                  <View style={styles.head} key={5}>
-                    <Image
-                      style={styles.locationicon}
-                      source={locationicon}
-                      alt="location-icon"
-                      key={3}
-                    />
-
-                    <Text style={styles.cityName} key={1}>
-                      {weather.city_name}
-                    </Text>
-                  </View>
-
-                  <View style={styles.second}>
-                    <View style={{width: 58}}>
-                      <Animatable.Image
-                        animation={slide}
-                        iterationCount="infinite"
-                        direction="alternate"
-                        source={clouds}
-                        style={styles.icon}
+      {weath ? (
+        <ScrollView
+          contentContainerStyle={styles.scrollView}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }>
+          <View style={styles.home}>
+            <View style={styles.homePage}>
+              <ImageBackground
+                source={
+                  dayPart === 'n'
+                    ? require('../assets/night.jpg')
+                    : require('../assets/day.jpg')
+                }
+                style={{height: `${100}%`, width: `${100}%`}}>
+                {weath.map((weather) => (
+                  <>
+                    <View style={styles.head} key={5}>
+                      <Image
+                        style={styles.locationicon}
+                        source={locationicon}
+                        alt="location-icon"
+                        key={3}
                       />
+
+                      <Text style={styles.cityName} key={1}>
+                        {weather.city_name}
+                      </Text>
                     </View>
-                    <Text style={styles.temperature} key={2}>
-                      {weather.temp}
-                      {'\u00b0'}
-                    </Text>
+
+                    <View style={styles.second}>
+                      <View style={{width: 58}}>
+                        <Animatable.Image
+                          animation={slide}
+                          iterationCount="infinite"
+                          direction="alternate"
+                          source={clouds}
+                          style={styles.icon}
+                        />
+                      </View>
+                      <Text style={styles.temperature} key={2}>
+                        {weather.temp}
+                        {'\u00b0'}
+                      </Text>
+                    </View>
+                    <View style={styles.third}>
+                      <Text style={styles.bothTemp}>
+                        {weather.app_temp}
+                        {'\u00b0'}
+                        {'/'}
+                        {weather.temp}
+                        {'\u00b0'} Feels like {weather.app_temp}
+                        {'\u00b0'}
+                      </Text>
+                      <Text style={styles.description}>
+                        {weather.weather.description}
+                      </Text>
+                    </View>
+                  </>
+                ))}
+
+                <>
+                  <View style={styles.fourth}>
+                    <TouchableHighlight
+                      underlayColor="transparent"
+                      onPress={() => {
+                        navigation.navigate('DrawerNavigation');
+                      }}>
+                      <Image source={Menu} style={styles.menu} />
+                    </TouchableHighlight>
+                    <TouchableHighlight
+                      underlayColor="transparent"
+                      onPress={() => navigation.navigate('NewLocation')}>
+                      <Image source={Plus} style={styles.plus} />
+                    </TouchableHighlight>
                   </View>
-                  <View style={styles.third}>
-                    <Text style={styles.bothTemp}>
-                      {weather.app_temp}
-                      {'\u00b0'}
-                      {'/'}
-                      {weather.temp}
-                      {'\u00b0'} Feels like {weather.app_temp}
-                      {'\u00b0'}
-                    </Text>
-                    <Text style={styles.description}>
-                      {weather.weather.description}
-                    </Text>
+                  <View style={styles.fifth}>
+                    <ScrollView
+                      horizontal={true}
+                      contentContainerStyle={{width: `${550}%`}}
+                      showsHorizontalScrollIndicator={false}
+                      scrollEventThrottle={200}
+                      decelerationRate="fast"
+                      pagingEnabled>
+                      {hourWeath ? (
+                        hourWeath.map((weather) => (
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                            }}>
+                            <View style={styles.hourCont}>
+                              <Text style={styles.time}>
+                                {weather.datetime.split(':')[1]}:00{' '}
+                                {weather.datetime.split(':')[1] <= 11 &&
+                                weather.datetime.split(':')[1] >= 0
+                                  ? 'am'
+                                  : 'pm'}
+                              </Text>
+                              <Image
+                                style={{
+                                  marginTop: 4,
+                                  marginBottom: 4,
+                                  width: 35,
+                                  height: 35,
+                                }}
+                                source={clouds}
+                              />
+                              <Text style={{color: 'white'}}>
+                                {weather.app_temp}
+                                {'\u00b0'}
+                              </Text>
+
+                              <View
+                                style={{
+                                  borderBottomColor: 'white',
+                                  borderBottomWidth: 1,
+                                  width: 30,
+                                  height: 1,
+                                }}
+                              />
+                              <Text style={{color: 'white'}}>
+                                {weather.temp}
+                                {'\u00b0'}
+                              </Text>
+                              <View style={styles.fifthLast}>
+                                <Image
+                                  source={Water}
+                                  style={{width: 10, height: 10}}
+                                />
+                                <Text style={{color: 'white'}}>
+                                  {weather.rh}
+                                </Text>
+                              </View>
+                            </View>
+                          </View>
+                        ))
+                      ) : (
+                        <></>
+                      )}
+                    </ScrollView>
+                  </View>
+                  <View style={styles.sixthHead}>
+                    <Text style={styles.sixthText}>Daily</Text>
+                  </View>
+                  <View style={styles.sixth}>
+                    <ScrollView
+                      horizontal={true}
+                      contentContainerStyle={{width: `${180}%`}}
+                      showsHorizontalScrollIndicator={false}
+                      scrollEventThrottle={200}
+                      decelerationRate="fast"
+                      pagingEnabled>
+                      {dailyWeath ? (
+                        dailyWeath.map((weather) => (
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                            }}>
+                            <View style={styles.hourCont}>
+                              <Text style={styles.time}>
+                                {weather.datetime}
+                              </Text>
+                              <Image
+                                style={{
+                                  marginTop: 4,
+                                  marginBottom: 4,
+                                  width: 35,
+                                  height: 35,
+                                }}
+                                source={clouds}
+                              />
+                              <Text style={{color: 'white'}}>
+                                {weather.max_temp}
+                                {'\u00b0'}
+                              </Text>
+
+                              <View
+                                style={{
+                                  borderBottomColor: 'white',
+                                  borderBottomWidth: 1,
+                                  width: 30,
+                                  height: 1,
+                                }}
+                              />
+                              <Text style={{color: 'white'}}>
+                                {weather.min_temp}
+                                {'\u00b0'}
+                              </Text>
+
+                              <View style={styles.fifthLast}>
+                                <Image
+                                  source={Water}
+                                  style={{width: 10, height: 10}}
+                                />
+                                <Text style={{color: 'white'}}>
+                                  {weather.rh}
+                                </Text>
+                              </View>
+                            </View>
+                          </View>
+                        ))
+                      ) : (
+                        <></>
+                      )}
+                    </ScrollView>
+                  </View>
+                  <View style={styles.seventhHead}>
+                    <Text style={styles.seventhText}>Details</Text>
+                  </View>
+                  <View style={styles.seventh}>
+                    {weath.map((weather) => (
+                      <>
+                        <View style={styles.seventhDetail}>
+                          <Text style={styles.textDetail}>Sunrise</Text>
+                          <Text style={styles.textDetail}>
+                            {weather.sunrise}
+                          </Text>
+                        </View>
+                        <View style={styles.seventhDetail}>
+                          <Text style={styles.textDetail}>Sunset</Text>
+                          <Text style={styles.textDetail}>
+                            {weather.sunset}
+                          </Text>
+                        </View>
+                        <View style={styles.seventhDetail}>
+                          <Text style={styles.textDetail}>Humidity</Text>
+                          <Text style={styles.textDetail}>{weather.rh}%</Text>
+                        </View>
+                      </>
+                    ))}
                   </View>
                 </>
-              ))}
-
-              <>
-                <View style={styles.fourth}>
-                  <TouchableHighlight
-                    underlayColor="transparent"
-                    onPress={() => {
-                      setDroawer(!droawer);
-                    }}>
-                    <Image source={Menu} style={styles.menu} />
-                  </TouchableHighlight>
-                  <TouchableHighlight
-                    underlayColor="transparent"
-                    onPress={() => navigation.navigate('NewLocation')}>
-                    <Image source={Plus} style={styles.plus} />
-                  </TouchableHighlight>
-                </View>
-                <View style={styles.fifth}>
-                  <ScrollView
-                    horizontal={true}
-                    contentContainerStyle={{width: `${550}%`}}
-                    showsHorizontalScrollIndicator={false}
-                    scrollEventThrottle={200}
-                    decelerationRate="fast"
-                    pagingEnabled>
-                    {hourWeath ? (
-                      hourWeath.map((weather) => (
-                        <View
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                          }}>
-                          <View style={styles.hourCont}>
-                            <Text style={styles.time}>
-                              {weather.datetime.split(':')[1]}:00{' '}
-                              {weather.datetime.split(':')[1] <= 11 &&
-                              weather.datetime.split(':')[1] >= 0
-                                ? 'am'
-                                : 'pm'}
-                            </Text>
-                            <Image
-                              style={{
-                                marginTop: 4,
-                                marginBottom: 4,
-                                width: 35,
-                                height: 35,
-                              }}
-                              source={clouds}
-                            />
-                            <Text style={{color: 'white'}}>
-                              {weather.app_temp}
-                              {'\u00b0'}
-                            </Text>
-
-                            <View
-                              style={{
-                                borderBottomColor: 'white',
-                                borderBottomWidth: 1,
-                                width: 30,
-                                height: 1,
-                              }}
-                            />
-                            <Text style={{color: 'white'}}>
-                              {weather.temp}
-                              {'\u00b0'}
-                            </Text>
-                            <View style={styles.fifthLast}>
-                              <Image
-                                source={Water}
-                                style={{width: 10, height: 10}}
-                              />
-                              <Text style={{color: 'white'}}>{weather.rh}</Text>
-                            </View>
-                          </View>
-                        </View>
-                      ))
-                    ) : (
-                      <></>
-                    )}
-                  </ScrollView>
-                </View>
-                <View style={styles.sixthHead}>
-                  <Text style={styles.sixthText}>Daily</Text>
-                </View>
-                <View style={styles.sixth}>
-                  <ScrollView
-                    horizontal={true}
-                    contentContainerStyle={{width: `${180}%`}}
-                    showsHorizontalScrollIndicator={false}
-                    scrollEventThrottle={200}
-                    decelerationRate="fast"
-                    pagingEnabled>
-                    {dailyWeath ? (
-                      dailyWeath.map((weather) => (
-                        <View
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                          }}>
-                          <View style={styles.hourCont}>
-                            <Text style={styles.time}>{weather.datetime}</Text>
-                            <Image
-                              style={{
-                                marginTop: 4,
-                                marginBottom: 4,
-                                width: 35,
-                                height: 35,
-                              }}
-                              source={clouds}
-                            />
-                            <Text style={{color: 'white'}}>
-                              {weather.max_temp}
-                              {'\u00b0'}
-                            </Text>
-
-                            <View
-                              style={{
-                                borderBottomColor: 'white',
-                                borderBottomWidth: 1,
-                                width: 30,
-                                height: 1,
-                              }}
-                            />
-                            <Text style={{color: 'white'}}>
-                              {weather.min_temp}
-                              {'\u00b0'}
-                            </Text>
-
-                            <View style={styles.fifthLast}>
-                              <Image
-                                source={Water}
-                                style={{width: 10, height: 10}}
-                              />
-                              <Text style={{color: 'white'}}>{weather.rh}</Text>
-                            </View>
-                          </View>
-                        </View>
-                      ))
-                    ) : (
-                      <></>
-                    )}
-                  </ScrollView>
-                </View>
-                <View style={styles.seventhHead}>
-                  <Text style={styles.seventhText}>Details</Text>
-                </View>
-                <View style={styles.seventh}>
-                  {weath.map((weather) => (
-                    <>
-                      <View style={styles.seventhDetail}>
-                        <Text style={styles.textDetail}>Sunrise</Text>
-                        <Text style={styles.textDetail}>{weather.sunrise}</Text>
-                      </View>
-                      <View style={styles.seventhDetail}>
-                        <Text style={styles.textDetail}>Sunset</Text>
-                        <Text style={styles.textDetail}>{weather.sunset}</Text>
-                      </View>
-                      <View style={styles.seventhDetail}>
-                        <Text style={styles.textDetail}>Humidity</Text>
-                        <Text style={styles.textDetail}>{weather.rh}%</Text>
-                      </View>
-                    </>
-                  ))}
-                </View>
-              </>
-            </ImageBackground>
+              </ImageBackground>
+            </View>
+          </View>
+        </ScrollView>
+      ) : (
+        <View style={styles.loading}>
+          <View>
+            <Image source={loading} style={{height: 250, width: 250}} />
           </View>
         </View>
-      </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -393,6 +449,12 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     height: `${148}%`,
+  },
+  loading: {
+    flex: 1,
+    backgroundColor: 'white',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   home: {flex: 1, flexDirection: 'row', backgroundColor: 'transparent'},
   droawer: {
