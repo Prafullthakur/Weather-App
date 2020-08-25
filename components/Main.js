@@ -1,6 +1,14 @@
 import React from 'react';
 import {useNavigation} from '@react-navigation/native';
-import {Alert, SafeAreaView, ScrollView, View, StatusBar} from 'react-native';
+import SplashScreen from 'react-native-splash-screen';
+import {
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  View,
+  StatusBar,
+  Platform,
+} from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 import FirstPage from './FirstPage';
 import SecondPage from './SecondPage';
@@ -12,6 +20,7 @@ import Geolocation from '@react-native-community/geolocation';
 export default function Main({route}) {
   const [location, setLocation] = React.useState(null);
   const [one, setOne] = React.useState(null);
+  const [waitit, setWaitit] = React.useState(false);
   const navigation = useNavigation();
   const findCoordinates = () => {
     Geolocation.getCurrentPosition(
@@ -40,13 +49,28 @@ export default function Main({route}) {
     }
   };
 
+  const wait = (timeout) => {
+    return new Promise((resolve) => {
+      setTimeout(resolve, timeout);
+    });
+  };
+
   const getLocation = async () => {
-    const value = await AsyncStorage.getItem('locationone');
-    setLocation(value);
+    await AsyncStorage.getItem('locationone')
+      .then((value) => {
+        setLocation(value);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   React.useEffect(() => {
     getLocation();
+    SplashScreen.hide();
+    wait(1000).then(() => {
+      setWaitit(true);
+    });
   }, []);
 
   React.useEffect(() => {
@@ -58,23 +82,28 @@ export default function Main({route}) {
 
   return !location ? (
     <>
-      <StatusBar barStyle="light-content" />
-      <SafeAreaView style={{flex: 1}}>
-        <View style={{flex: 1}}>
-          <ScrollView
-            horizontal={true}
-            contentContainerStyle={{width: `${300}%`}}
-            showsHorizontalScrollIndicator={false}
-            scrollEventThrottle={200}
-            decelerationRate="fast"
-            pagingEnabled>
-            <FirstPage />
-            <SecondPage />
+      {Platform.OS === 'ios' && <StatusBar barStyle="light-content" />}
 
-            <ThirdPage findCoordinates={findCoordinates} />
-          </ScrollView>
-        </View>
-      </SafeAreaView>
+      {waitit ? (
+        <SafeAreaView style={{flex: 1}}>
+          <View style={{flex: 1}}>
+            <ScrollView
+              horizontal={true}
+              contentContainerStyle={{width: `${300}%`}}
+              showsHorizontalScrollIndicator={false}
+              scrollEventThrottle={200}
+              decelerationRate="fast"
+              pagingEnabled>
+              <FirstPage />
+              <SecondPage />
+
+              <ThirdPage findCoordinates={findCoordinates} />
+            </ScrollView>
+          </View>
+        </SafeAreaView>
+      ) : (
+        <View></View>
+      )}
     </>
   ) : (
     <>

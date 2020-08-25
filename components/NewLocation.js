@@ -8,6 +8,7 @@ import {
   ImageBackground,
   Image,
   StyleSheet,
+  LogBox,
 } from 'react-native';
 import locationicon from '../assets/location-pin.png';
 import Search from '../assets/search.png';
@@ -15,13 +16,12 @@ import lens from '../assets/lens2.png';
 import SearchPage from '../assets/Thirdbg.jpg';
 export default function NewLocation() {
   const navigation = useNavigation();
-  const [countriesList, setcountriesList] = React.useState({
-    cityName: '',
-    stateName: '',
-    countryName: '',
-  });
+
   const [text, setText] = React.useState('');
   var worldMapData = require('city-state-country');
+  React.useEffect(() => {
+    LogBox.ignoreLogs(['Warning: ...']);
+  }, []);
 
   return (
     <View style={{flex: 1, backgroundColor: '#fff'}}>

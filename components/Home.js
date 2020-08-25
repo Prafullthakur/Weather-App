@@ -12,6 +12,7 @@ import {
   ImageBackground,
   Image,
   TouchableHighlight,
+  LogBox,
 } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 import Geolocation from '@react-native-community/geolocation';
@@ -25,7 +26,6 @@ import loading from '../assets/Gifs/loading.gif';
 export default function Home({one}) {
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = React.useState(false);
-
   const [weath, setWeath] = React.useState(null);
   const [hourWeath, setHourWeath] = React.useState(null);
   const [dayPart, setDayPart] = React.useState(null);
@@ -45,7 +45,6 @@ export default function Home({one}) {
         `https://api.weatherbit.io/v2.0/current?lang=en&lat=${latitude}&lon=${longitude}&key=8b2561217ead4dbc80bc647368edd68c`,
       )
       .then((res) => {
-        console.log(res.data.data);
         setWeath(res.data.data);
         res.data.data.map((data) => setDayPart(data.pod));
       })
@@ -88,7 +87,6 @@ export default function Home({one}) {
         `https://api.weatherbit.io/v2.0/current?lang=en&city=${city}&country=${country}&key=8b2561217ead4dbc80bc647368edd68c`,
       )
       .then((res) => {
-        console.log(res);
         setWeath(res.data.data);
         res.data.data.map((data) => setDayPart(data.pod));
       })
@@ -123,7 +121,11 @@ export default function Home({one}) {
   };
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    if (!one) {
+    if (one) {
+      runSearch(one.cityName, one.countryName);
+      runSearchWeek(one.cityName, one.countryName);
+      runSearchDaily(one.cityName, one.countryName);
+    } else {
       Geolocation.getCurrentPosition(
         async (position) => {
           const location = JSON.stringify(position);
@@ -141,10 +143,6 @@ export default function Home({one}) {
         (error) => Alert.alert(error.message),
         {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000},
       );
-    } else {
-      runSearch(one.cityName, one.countryName);
-      runSearchWeek(one.cityName, one.countryName);
-      runSearchDaily(one.cityName, one.countryName);
     }
 
     wait(1500).then(() => setRefreshing(false));
@@ -190,6 +188,7 @@ export default function Home({one}) {
   React.useEffect(() => {
     one ? setCountry(one) : setCountry(null);
     retrivedata();
+    LogBox.ignoreLogs(['Warning: ...']);
   }, [one]);
 
   return (
