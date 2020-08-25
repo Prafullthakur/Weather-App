@@ -1,5 +1,4 @@
 import React from 'react';
-import {useNavigation} from '@react-navigation/native';
 import axios from 'axios';
 import {
   Alert,
@@ -23,8 +22,7 @@ import Menu from '../assets/menu.png';
 import Plus from '../assets/plus.png';
 import Water from '../assets/water.png';
 import loading from '../assets/Gifs/loading.gif';
-export default function Home({one}) {
-  const navigation = useNavigation();
+export default function Home({route, navigation}) {
   const [refreshing, setRefreshing] = React.useState(false);
   const [weath, setWeath] = React.useState(null);
   const [hourWeath, setHourWeath] = React.useState(null);
@@ -119,40 +117,37 @@ export default function Home({one}) {
         console.log(error);
       });
   };
-  const onRefresh = React.useCallback(() => {
+  const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    if (one) {
-      runSearch(one.cityName, one.countryName);
-      runSearchWeek(one.cityName, one.countryName);
-      runSearchDaily(one.cityName, one.countryName);
-    } else {
-      Geolocation.getCurrentPosition(
-        async (position) => {
-          const location = JSON.stringify(position);
-          try {
-            await AsyncStorage.setItem('location', location);
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
-            run(latitude, longitude);
-            runhour(latitude, longitude);
-            rundaily(latitude, longitude);
-          } catch (error) {
-            console.log(error);
-          }
-        },
-        (error) => Alert.alert(error.message),
-        {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000},
-      );
-    }
+
+    Geolocation.getCurrentPosition(
+      async (position) => {
+        const location = JSON.stringify(position);
+        try {
+          await AsyncStorage.setItem('location', location);
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+          run(latitude, longitude);
+          runhour(latitude, longitude);
+          rundaily(latitude, longitude);
+        } catch (error) {
+          console.log(error);
+        }
+      },
+      (error) => Alert.alert(error.message),
+      {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000},
+    );
 
     wait(1500).then(() => setRefreshing(false));
   }, []);
 
-  const retrivedata = () => {
-    if (one) {
-      runSearch(one.cityName, one.countryName);
-      runSearchWeek(one.cityName, one.countryName);
-      runSearchDaily(one.cityName, one.countryName);
+  React.useEffect(() => {
+    if (route.params) {
+      const {cityName, stateName, countryName} = route.params;
+      setCountry({cityName, stateName, countryName});
+      runSearch(cityName, countryName);
+      runSearchWeek(cityName, countryName);
+      runSearchDaily(cityName, countryName);
     } else {
       Geolocation.getCurrentPosition(
         async (position) => {
@@ -183,13 +178,8 @@ export default function Home({one}) {
         {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000},
       );
     }
-  };
-
-  React.useEffect(() => {
-    one ? setCountry(one) : setCountry(null);
-    retrivedata();
     LogBox.ignoreLogs(['Warning: ...']);
-  }, [one]);
+  }, [route.params]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -255,11 +245,12 @@ export default function Home({one}) {
                 ))}
 
                 <>
+                  {console.log(country)}
                   <View style={styles.fourth}>
                     <TouchableHighlight
                       underlayColor="transparent"
                       onPress={() => {
-                        navigation.navigate('DrawerNavigation');
+                        navigation.toggleDrawer();
                       }}>
                       <Image source={Menu} style={styles.menu} />
                     </TouchableHighlight>

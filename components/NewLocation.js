@@ -28,7 +28,7 @@ export default function NewLocation() {
       <ImageBackground source={SearchPage} style={{flex: 1}}>
         <TouchableOpacity
           style={{flex: 1}}
-          onPress={() => navigation.navigate('Main')}>
+          onPress={() => navigation.navigate('Home')}>
           <View style={styles.first}>
             <View style={styles.searchView}>
               <Image source={Search} style={styles.searchImg} />
@@ -57,7 +57,7 @@ export default function NewLocation() {
                       <TouchableOpacity
                         style={{width: `${100}%`}}
                         onPress={() => {
-                          navigation.navigate('Main', {
+                          navigation.navigate('Home', {
                             cityName: country.cityName,
                             stateName: country.stateName,
                             countryName: country.countryName,

@@ -1,5 +1,4 @@
 import React from 'react';
-import {useNavigation} from '@react-navigation/native';
 import SplashScreen from 'react-native-splash-screen';
 import {
   Alert,
@@ -17,11 +16,11 @@ import Home from './Home';
 // navigator.geolocation = require('@react-native-community/geolocation');
 import Geolocation from '@react-native-community/geolocation';
 
-export default function Main({route}) {
+export default function Main({navigation}) {
   const [location, setLocation] = React.useState(null);
-  const [one, setOne] = React.useState(null);
+
   const [waitit, setWaitit] = React.useState(false);
-  const navigation = useNavigation();
+
   const findCoordinates = () => {
     Geolocation.getCurrentPosition(
       async (position) => {
@@ -73,13 +72,6 @@ export default function Main({route}) {
     });
   }, []);
 
-  React.useEffect(() => {
-    if (route.params) {
-      const {cityName, stateName, countryName} = route.params;
-      setOne({cityName, stateName, countryName});
-    }
-  }, [route.params]);
-
   return !location ? (
     <>
       {Platform.OS === 'ios' && <StatusBar barStyle="light-content" />}
@@ -106,8 +98,6 @@ export default function Main({route}) {
       )}
     </>
   ) : (
-    <>
-      <Home one={one} />
-    </>
+    <>{navigation.navigate('DrawerNavigation')}</>
   );
 }
